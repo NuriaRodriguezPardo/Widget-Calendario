@@ -7,7 +7,8 @@ from googleapiclient.discovery import build
 
 SCOPES = [
     'https://www.googleapis.com/auth/calendar.readonly',
-    'https://www.googleapis.com/auth/calendar.calendarlist.readonly'
+    'https://www.googleapis.com/auth/calendar.calendarlist.readonly',
+    'https://www.googleapis.com/auth/tasks.readonly',
 ]
 
 # Mapa de "paraula al nom del calendari" -> "tag" que fem servir al fitxer de sortida.
@@ -16,7 +17,6 @@ DICCIONARI_TAGS = {
     'principal':   'principal',
     'horari':      'horari',
     'treball':     'treball',
-    'beca':        'treball',
     'gym':         'gym',
     'aniversaris': 'aniversaris',
     'tasks':       'tasks',
@@ -34,6 +34,57 @@ def obtenir_setmana_actual():
     dilluns = avui - datetime.timedelta(days=avui.weekday())
     return [dilluns + datetime.timedelta(days=i) for i in range(7)]
 
+def obtenir_tasques(creds, dies_setmana):
+    """Retorna una llista de (data 'YYYY-MM-DD', títol) per a les tasques
+    amb data límit dins de la setmana."""
+    service_tasks = build('tasks', 'v1', credentials=creds)
+    dates_valides = {d.strftime('%Y-%m-%d') for d in dies_setmana}
+
+    # Marge d'un dia a cada banda: Tasks guarda la data com a mitjanit UTC
+    # i així evitem perdre tasques per diferències de zona horària.
+    due_min = (dies_setmana[0] - datetime.timedelta(days=1)).strftime('%Y-%m-%dT00:00:00Z')
+    due_max = (dies_setmana[-1] + datetime.timedelta(days=1)).strftime('%Y-%m-%dT23:59:59Z')
+
+    resultat = []
+    try:
+        llistes = service_tasks.tasklists().list(maxResults=100).execute().get('items', [])
+    except Exception as e:
+        print(f"Avís: no s'han pogut llegir les llistes de tasques: {e}")
+        return resultat
+
+    for llista in llistes:
+        page_token = None
+        while True:
+            try:
+                resp = service_tasks.tasks().list(
+                    tasklist=llista['id'],
+                    dueMin=due_min,
+                    dueMax=due_max,
+                    showCompleted=True,
+                    showHidden=True,
+                    maxResults=100,
+                    pageToken=page_token,
+                ).execute()
+            except Exception as e:
+                print(f"Avís: no s'han pogut llegir tasques de '{llista.get('title')}': {e}")
+                break
+
+            for t in resp.get('items', []):
+                due = t.get('due')
+                if not due:
+                    continue  # sense data límit no es pot ubicar en cap dia
+                data = due[:10]
+                if data in dates_valides:
+                    feta = t.get('status') == 'completed'
+                    resultat.append((data, t.get('title', '(sense títol)'), feta))
+
+            page_token = resp.get('nextPageToken')
+            if not page_token:
+                break
+    return resultat
+
+def tatxar(text):
+    return ''.join(c + '\u0336' for c in text)
 
 def main():
     creds = None
@@ -74,7 +125,6 @@ def main():
             if clau in nom_cal:
                 tag = valor
                 break
-
         try:
             events_result = service.events().list(
                 calendarId=cal_id, timeMin=time_min, timeMax=time_max,
@@ -113,6 +163,12 @@ def main():
         except Exception as e:
             print(f"Avís: no s'ha pogut llegir esdeveniments de '{nom_cal}': {e}")
             continue
+    
+    for data, titol, feta in obtenir_tasques(creds, dies_setmana):
+        if feta:
+            calendari_setmana[data].append((None, None, "X " + titol, 'tasksfet'))
+        else:
+            calendari_setmana[data].append((None, None, titol, 'tasks'))
 
     noms_dies = ["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"]
 

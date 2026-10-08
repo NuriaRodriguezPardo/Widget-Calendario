@@ -5,8 +5,8 @@
 -- van en una franja fixa a dalt.
 
 NumDies   = 7
-MaxAllDay = 2   -- caixes reservades per a esdeveniments de tot el dia
-MaxTimed  = 6   -- caixes reservades per a esdeveniments amb hora
+MaxAllDay = 4   -- caixes reservades per a esdeveniments de tot el dia
+MaxTimed  = 4   -- caixes reservades per a esdeveniments amb hora
 MaxEvents = MaxAllDay + MaxTimed
 
 AmpladaColumna = 150
@@ -30,6 +30,7 @@ Colors = {
     gym         = "140,70,60,215",    -- Marró vermellós fosc
     aniversaris = "90,55,50,215",     -- Marró xocolata fosc
     tasks       = "245,225,205,215",  -- Beix / crema clar
+    tasksfet    = "170,150,145,150",  -- Gris rosat apagat (tasca feta)
 }
 -- Color de texto (blanco o negro) según el que mejor contrasta con cada fondo
 TextColors = {
@@ -39,6 +40,7 @@ TextColors = {
     gym         = "255,255,255,255",  -- fons fosc -> lletres blanques
     aniversaris = "255,255,255,255",  -- fons fosc -> lletres blanques
     tasks       = "20,20,20,255",     -- fons clar -> lletres negres
+    tasksfet    = "70,60,60,255",     -- text gris fosc
 }
 ColorBuit         = "150,110,110,140"  -- Fons per a dies lliures (marró rosat suau)
 ColorBuitText     = "235,225,220,255"
@@ -237,6 +239,7 @@ function Update()
         local x = MargeEsquerre + (d - 1) * (AmpladaColumna + EspaiColumnes)
 
         SKIN:Bang('!SetOption', 'MeterTit' .. d, 'Text', dia and dia.titol or '')
+        SKIN:Bang('!SetOption', 'MeterTit' .. d, 'FontColor', '0,0,0')
         SKIN:Bang('!SetOption', 'MeterTit' .. d, 'X', x)
         SKIN:Bang('!UpdateMeter', 'MeterTit' .. d)
 

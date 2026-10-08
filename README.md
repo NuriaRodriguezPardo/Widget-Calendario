@@ -170,7 +170,7 @@ Las constantes al inicio de `parser.lua` controlan el layout:
 ---
 
 ## Ejemplo semana casual
-![alt text](image.png)
+![alt text](image-1.png)
 ---
 
 
