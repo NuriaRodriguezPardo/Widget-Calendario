@@ -20,8 +20,6 @@ El proyecto tiene dos partes que trabajan juntas:
 - Lectura robusta de codificación (UTF-8 y UTF-16 con BOM).
 - Actualización automática cada 60 segundos por parte del skin (lectura del fichero de texto); la descarga de Google Calendar y Google Tasks se ejecuta por separado (manual o programada).
 
----
-
 ## Arquitectura
 
 ```mermaid
@@ -34,13 +32,13 @@ flowchart TD
     D -->|parsea líneas y asigna columnas/colores| E{"¿Eventos<br/>solapados?"}
     E -->|Sí| F[Algoritmo sweep-line:<br/>reparte en columnas]
     E -->|No| G[Una columna a ancho completo]
-    D -->|eventos "Tot el dia" y tareas| K[Franja fija superior<br/>máx. MaxAllDay cajas por día]
+    D -->|eventos Tot el dia y tareas| K[Franja fija superior<br/>máx. MaxAllDay cajas por día]
     F --> H["SKIN:Bang('!SetOption', ...)<br/>posiciona y colorea cada caja"]
     G --> H
     K --> H
     H --> I["CalendariWidget.ini<br/>(Meters: Shape + String)"]
     I --> J[["Widget en el escritorio"]]
-
+ 
     style A fill:#e8c4d0,stroke:#8a4a5c,color:#2a1015
     style A2 fill:#e8c4d0,stroke:#8a4a5c,color:#2a1015
     style T fill:#f5e1d5,stroke:#8a4a5c,color:#2a1015
@@ -52,7 +50,6 @@ flowchart TD
     style I fill:#f5e1d5,stroke:#8a4a5c,color:#2a1015
     style J fill:#e8c4d0,stroke:#8a4a5c,color:#2a1015
 ```
-
 ### Flujo resumido
 
 1. **Autenticación** — `actualitzar_calendari.py` usa OAuth2 (`credentials.json` → `token.json`) para autenticarse contra Google con permisos de solo lectura. Los permisos (*scopes*) son tres: `calendar.readonly`, `calendar.calendarlist.readonly` y `tasks.readonly`.
