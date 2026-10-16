@@ -1,7 +1,15 @@
-Dilluns 05/10|08:00-10:00 - CPDS [horari] # 10:00-12:00 - SMDE [horari] # 12:00-14:00 - AMMM [horari]
-Dimarts 06/10|10:00-12:00 - RA [horari] # 12:00-14:00 - TMIRI [horari] # 16:00-17:00 - Piernas [gym] # 17:00-21:00 - Llucia [principal]
-Dimecres 07/10|09:00-10:00 - Laser [principal] # 12:00-14:00 - Seminar [horari] # 14:00-16:00 - Lunchhhh [principal]
-Dijous 08/10|Tot el dia - X Parallelism deliverable [tasksfet] # 10:00-12:00 - SMDE [horari] # 12:00-14:00 - AMMM [horari] # 16:00-17:00 - Biceps y espalda [gym]
-Divendres 09/10|08:00-10:00 - RA [horari] # 10:00-12:00 - CPDS [horari] # 12:00-14:00 - TMIRI [horari] # 16:00-17:00 - Triceps y pecho [gym]
-Dissabte 10/10|17:00-23:00 - Oktoberfest [principal]
-Diumenge 11/10|Tot el dia - AMMM -   Lab._Session-1.pdf [tasks]
+Dilluns 12/10|Lliure (Sense esdeveniments)
+Dimarts 13/10|12:00-14:00 - TMIRI [horari] # 19:00-20:00 - Piernas + triceps [gym]
+Dimecres 14/10|08:00-10:00 - CPDS [horari] # 10:00-12:00 - SMDE [horari] # 12:00-13:00 - Cita Nuria Domenech, Barbera promocio [principal] # 12:00-14:00 - AMMM [horari] # 19:00-20:00 - Biceps y espalda [gym]
+Dijous 15/10|Tot el dia - X Parallelism iteration 1 [tasksfet] # 10:00-12:00 - SMDE [horari] # 12:00-14:00 - AMMM [horari] # 16:00-20:00 - Biblio [principal]
+Divendres 16/10|10:00-12:00 - CPDS [horari] # 12:00-14:00 - TMIRI [horari]
+Dissabte 17/10|Lliure (Sense esdeveniments)
+Diumenge 18/10|Lliure (Sense esdeveniments)
+Dilluns 19/10|Lliure (Sense esdeveniments)
+Dimarts 20/10|Lliure (Sense esdeveniments)
+Dimecres 21/10|Lliure (Sense esdeveniments)
+Dijous 22/10|Lliure (Sense esdeveniments)
+Divendres 23/10|Lliure (Sense esdeveniments)
+Dissabte 24/10|Lliure (Sense esdeveniments)
+Diumenge 25/10|Lliure (Sense esdeveniments)
+TASCA|29/10|Parallelism Assignment 2
