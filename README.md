@@ -21,6 +21,7 @@ El proyecto tiene dos partes que trabajan juntas:
 - Colores por calendario, en una paleta de rosas y marrones, con transparencia; el color del texto (blanco/negro) se elige automáticamente según el contraste de cada fondo.
 - Soporte para eventos que cruzan la medianoche (se parten en dos bloques, uno por día).
 - Lectura robusta de codificación (UTF-8 y UTF-16 con BOM).
+- **Catalán y castellano con todos sus caracteres** (à è é í ï ò ó ú ü ç ñ l·l ¿ ¡ €…): los títulos de eventos y tareas viajan en UTF-8 de principio a fin, se normalizan a su forma compuesta (NFC) y las tareas del mismo día se ordenan alfabéticamente sin que los acentos o la `ñ` las desordenen.
 - Actualización automática cada 60 segundos por parte del skin (lectura del fichero de texto); la descarga de Google Calendar y Google Tasks se ejecuta por separado (manual o programada).
 
 ## Arquitectura
@@ -66,7 +67,7 @@ flowchart TD
 2. **Descarga de eventos** — obtiene la lista de calendarios del usuario, y para cada uno, los eventos de **dos semanas**: la actual y la siguiente (14 días, de lunes a domingo).
 3. **Descarga de tareas** — Google Tasks **no forma parte de la Calendar API**: tiene su propia API, así que `obtenir_tasques()` lee por separado todas las listas de tareas. Por cada lista hace dos consultas: (a) las tareas con fecha límite dentro de las dos semanas, pendientes y completadas, que se pintan en su día; y (b) **todas las pendientes** con fecha límite, de cualquier fecha, para el panel "Tasques pendents". Se llama **una sola vez por ejecución**, fuera del bucle de calendarios.
 4. **Clasificación por tag** — el nombre de cada calendario se compara contra `DICCIONARI_TAGS` para asignarle una etiqueta (`principal`, `horari`, `treball`, `gym`, `aniversaris`, `tasks`); si no coincide con ninguna palabra clave, se usa `principal` por defecto. Las tareas de Google Tasks no pasan por el diccionario: las pendientes llevan siempre el tag `tasks` y las completadas `tasksfet`. Para la semana siguiente solo se conservan los tags de `TAGS_SETMANA_VINENT` (`principal`, `tasks` y `tasksfet`).
-5. **Serialización** — escribe `esdeveniments_setmana.txt`, un fichero UTF-8 con 14 líneas de días (formato `NombreDia|evento1 # evento2 # ...`) seguidas de una línea `TASCA|...` por cada tarea pendiente (ver [formato del fichero](#formato-de-esdeveniments_setmanatxt)). Las tareas con fecha se escriben como eventos de "Tot el dia" (`Tot el dia - Título [tasks]`), porque Google Tasks solo guarda la fecha, no la hora. Antes de escribir, los títulos se limpian: se colapsan los saltos de línea y la `#` (separador del fichero) se sustituye por `＃`.
+5. **Serialización** — escribe `esdeveniments_setmana.txt`, un fichero UTF-8 con 14 líneas de días (formato `NombreDia|evento1 # evento2 # ...`) seguidas de una línea `TASCA|...` por cada tarea pendiente (ver [formato del fichero](#formato-de-esdeveniments_setmanatxt)). Las tareas con fecha se escriben como eventos de "Tot el dia" (`Tot el dia - Título [tasks]`), porque Google Tasks solo guarda la fecha, no la hora. Antes de escribir, los títulos se limpian: se pasan a forma NFC (cada letra con su acento en un solo carácter, para que no se dibuje desplazado un texto creado desde un móvil o un Mac), se colapsan los saltos de línea y la `#` (separador del fichero) se sustituye por `＃`.
 6. **Lectura por Rainmeter** — `parser.lua` (medida `Script` dentro de `CalendariWidget.ini`) relee ese fichero en cada ciclo de `Update`.
 7. **Layout** — para los 7 primeros días, separa eventos de "todo el día" y tareas (franja fija arriba) de eventos con hora; a estos últimos les aplica el algoritmo de columnas para que los solapados se repartan en paralelo, igual que en Google Calendar. Los días 8 a 14 se convierten en una lista vertical (cabecera de día + eventos/tareas) para el panel "Setmana vinent", y las líneas `TASCA` en otra lista para "Tasques pendents".
 8. **Render** — por cada evento, `parser.lua` llama a `SKIN:Bang('!SetOption', ...)` para mover, redimensionar, colorear y mostrar el par de *meters* `MeterEventBg_D_S` (fondo) y `MeterEvent_D_S` (texto) correspondientes a ese día (`D`) y slot (`S`). Los paneles de la derecha usan sus propios pares de meters por fila: `MeterPropBg_N` / `MeterProp_N` ("Setmana vinent") y `MeterTascaBg_N` / `MeterTasca_N` ("Tasques pendents").
@@ -164,9 +165,8 @@ Ambas APIs son gratuitas y no requieren activar facturación; el uso de este wid
    - Habilita la **Google Calendar API** y la **Google Tasks API** (*APIs y servicios → Biblioteca*).
    - Crea credenciales OAuth 2.0 de tipo "Aplicación de escritorio" y descarga el JSON como `credentials.json` en la raíz del proyecto.
 3. **Instala las dependencias de Python** (ver sección de Requisitos).
-4. **Ejecuta el script una vez** para autenticarte, **desde la carpeta del script** (el script busca `token.json` y `credentials.json` en la carpeta desde la que lo lanzas):
+4. **Ejecuta el script una vez** para autenticarte (`token.json` y `credentials.json` se buscan siempre en la carpeta donde está el script, lo lances desde donde lo lances):
    ```bash
-   cd %USERPROFILE%\Documents\Rainmeter\Skins\CalendariHoritzontal
    python actualitzar_calendari.py
    ```
    Se abrirá el navegador para el login de Google; tras aceptar los permisos (calendario y tareas), se generará `token.json` (las siguientes ejecuciones ya no pedirán login, hasta que el token caduque).
@@ -178,9 +178,22 @@ Ambas APIs son gratuitas y no requieren activar facturación; el uso de este wid
    Programador de tareas → Crear tarea básica
    Desencadenador: cada 30-60 minutos
    Acción: python.exe  C:\ruta\a\actualitzar_calendari.py
-   Iniciar en: C:\ruta\a\   (la carpeta del script; si lo dejas vacío no encontrará token.json)
    ```
-   Usa el `python.exe` que tenga instaladas las librerías de Google.
+   Usa el `python.exe` que tenga instaladas las librerías de Google. Si el token deja de ser válido, el script abrirá el navegador para iniciar sesión, así que una ejecución desatendida se quedaría esperando: publica la app (ver Troubleshooting) para evitarlo.
+
+### Idiomas y caracteres (catalán y castellano)
+
+Todo el recorrido del texto está pensado para catalán y castellano:
+
+- **Python → fichero:** `esdeveniments_setmana.txt` se escribe siempre en UTF-8 (sin BOM). Los títulos pasan por `neteja()`, que además los normaliza a NFC.
+- **Fichero → Lua:** `parser.lua` lee UTF-8 (con o sin BOM) y UTF-16, y entrega el texto tal cual a los meters. La fuente de los meters es *Segoe UI*, que dibuja todas las letras del catalán y del castellano.
+- **Guarda `parser.lua` como UTF-8 con BOM (recomendado).** Rainmeter solo interpreta como UTF-8 los textos de un script cuando el archivo empieza por BOM; sin BOM los trata como ANSI y los acentos se rompen (`Núria` se ve `NÃºria`, `Rodríguez` se ve `RodrÃ­guez`). En VS Code, mira abajo a la derecha: debe poner **UTF-8 with BOM**; si no, haz clic ahí → *Save with Encoding* → *UTF-8 with BOM*.
+- **El parser se adapta si el BOM se pierde.** Al cargar, `parser.lua` comprueba si su propio archivo tiene BOM. Con BOM envía los textos tal cual; sin BOM los convierte a Windows-1252 (la codificación ANSI de Windows en español y catalán), así que acentos, `ñ`, `ç`, `l·l`, `¿`, `¡`, `€` y las comillas y guiones tipográficos se ven bien igualmente. Lo que no existe en Windows-1252 (los emojis) sale como `?` en ese modo. El modo elegido queda escrito en el **Log de Rainmeter** (clic derecho en el icono → *About* → *Log*): `parser.lua - mode de text: ...`. Si aun así ves `Ã`, cambia `ModeText = 'auto'` por `'ansi'` (o por `'utf8'`) al principio de `parser.lua`.
+- **Textos del propio widget:** los que llevan acento y están escritos en `parser.lua` (por ejemplo "més" en `... +N més`) van con escapes UTF-8 (`m\195\169s`).
+- **Consola:** el script configura su salida para que un acento, una `ñ` o un símbolo raro nunca provoque un error al imprimir (por ejemplo, desde el Programador de tareas). Lo que la consola no pueda mostrar sale como `?`.
+- **Si escribes acentos a mano en `CalendariWidget.ini`:** guárdalo como **UTF-8 con BOM** (o UTF-16 LE); Rainmeter no sabe que un `.ini` sin BOM está en UTF-8 y los acentos saldrían rotos. Con los textos actuales no hace falta, porque los pone `parser.lua`.
+
+Para comprobarlo en tu pantalla, crea en Google Calendar un evento llamado `Prueba àèéíïòóúü ç l·l ñ ¿¡` y ejecuta el script.
 
 ---
 
@@ -252,8 +265,8 @@ Con los valores por defecto caben unas 17 filas en cada panel (en "Setmana vinen
 
 - **He cambiado `parser.lua` o el `.ini` y no se nota nada:** los scripts Lua no se recargan solos. Haz clic derecho sobre el skin → *Refresh skin*.
 - **`ModuleNotFoundError: No module named 'google'`:** el Python con el que ejecutas el script no tiene las librerías de Google. Cada instalación de Python (Microsoft Store, Miniconda, MSYS2...) tiene sus propios paquetes. Instálalas en el intérprete que uses (`python -m pip install google-auth google-auth-oauthlib google-api-python-client`) y, en VS Code, selecciona ese mismo intérprete (*Python: Select Interpreter*). Evita el Python de MSYS2, que suele bloquear `pip`.
-- **`FileNotFoundError: ... 'credentials.json'` (o no encuentra `token.json`):** el script busca esos ficheros en la carpeta **desde la que lo ejecutas**, no donde está guardado el `.py`. Ejecútalo desde la carpeta del script (en VS Code, abre esa carpeta con *Archivo → Abrir carpeta*; en el Programador de tareas, rellena *Iniciar en*).
-- **`invalid_grant: Token has been expired or revoked`:** el permiso guardado en `token.json` ya no es válido (caducidad, revocación o token de otra copia del script). Borra `token.json`, ejecuta el script y autoriza de nuevo en el navegador. Si se repite cada semana, mira la entrada sobre el modo *Testing* más abajo.
+- **`FileNotFoundError: ... 'credentials.json'`:** `credentials.json` (y `token.json`) deben estar en la **misma carpeta que `actualitzar_calendari.py`**. El script los busca ahí aunque lo lances desde otra carpeta.
+- **`invalid_grant: Token has been expired or revoked`:** el permiso guardado en `token.json` ya no es válido (caducidad, revocación o token de otra copia del script). El script lo detecta, avisa y abre el navegador para iniciar sesión de nuevo, sin tener que borrar `token.json` a mano. Si te pasa cada pocos días, la causa suele ser que la app está en modo *Testing* (ver más abajo).
 - **Las tareas no aparecen:**
   - Solo se muestran las tareas **con fecha límite**; sin fecha no hay día donde ponerlas ni orden en la lista de pendientes.
   - En la rejilla y en "Setmana vinent" solo salen las de la semana actual y la siguiente. El panel "Tasques pendents" muestra todas las pendientes con fecha, de cualquier fecha.
@@ -266,9 +279,15 @@ Con los valores por defecto caben unas 17 filas en cada panel (en "Setmana vinen
 - **El panel "Setmana vinent" pone "Sense dades (executa el script)":** el `esdeveniments_setmana.txt` es de una versión anterior (7 líneas). Vuelve a ejecutar el script.
 - **Aparece una fila `... +N més` al final de un panel:** es normal; indica que hay N elementos más de los que caben en la altura del panel.
 - **Una línea del fichero se ignora:** comprueba que el tag solo tiene letras (nada de guiones bajos ni números) y que tiene color definido en `Colors` / `TextColors`.
+- **Un acento, una `ñ` o una `ç` se ve rota (`Ã©`, `?`, un cuadrado):**
+  - **Si ves `Ã` seguido de otro símbolo (`NÃºria`, `RodrÃ­guez`, `piÃ±ata`):** es un problema de codificación de `parser.lua`. Haz *Refresh skin*, abre el Log de Rainmeter y mira la línea `parser.lua - mode de text: ...`. Guarda el archivo como **UTF-8 con BOM** (ver *Idiomas y caracteres*) y, si sigue igual, prueba `ModeText = 'ansi'` al principio de `parser.lua`.
+  - Ejecuta el script otra vez: el fichero se escribe siempre en UTF-8 y se vuelve a leer entero.
+  - Si has editado a mano `esdeveniments_setmana.txt`, guárdalo como UTF-8 (en el Bloc de notas, *Guardar como → Codificación: UTF-8*). Mejor no lo edites: se regenera en cada ejecución.
+  - Si has editado `parser.lua` o el `.ini` y has añadido acentos directamente, guarda **ambos** como UTF-8 con BOM.
+  - Si el carácter sale como un cuadrado, es que la fuente no lo tiene (suele pasar con emojis). Las letras del catalán y del castellano están todas en *Segoe UI*.
 - **Un título sale con `＃` en lugar de `#`:** es intencionado. El `#` es el separador de eventos del fichero, así que el script lo sustituye por su versión de ancho completo.
 - **Error 403 `access_denied` al autenticarte:** tu app está en modo *Testing* y tu cuenta no figura como usuario de prueba. En Google Cloud Console ve a *Google Auth Platform → Público → Usuarios de prueba* y añade tu correo.
-- **Tengo que volver a autenticarme cada semana:** mientras la app esté en modo *Testing*, Google caduca el token de actualización a los 7 días. En *Google Auth Platform → Público* puedes pulsar *Publicar la aplicación*; al ser de uso personal no hace falta verificarla, y el token deja de caducar.
+- **Tengo que volver a autenticarme cada semana (o cada pocos días):** mientras la app esté en modo *Testing*, Google caduca el token de actualización a los 7 días. En *Google Auth Platform → Público* mira el *Estado de publicación*; si pone *En pruebas*, pulsa *Publicar la aplicación* (al ser de uso personal no hace falta verificarla). Después borra `token.json` una última vez e inicia sesión de nuevo: el token emitido en modo pruebas conserva la caducidad. Si aun así caduca, comprueba que la cuenta no sea de una universidad o empresa: los administradores de Google Workspace pueden obligar a reautenticarse cada cierto tiempo.
 - **Aviso "Aplicación no verificada" en el navegador:** es normal en proyectos personales. Pulsa *Avanzado → Ir a (nombre del proyecto)* y acepta.
 
 ---

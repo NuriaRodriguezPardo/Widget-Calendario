@@ -1,15 +1,21 @@
-Dilluns 12/10|Lliure (Sense esdeveniments)
-Dimarts 13/10|12:00-14:00 - TMIRI [horari] # 19:00-20:00 - Piernas + triceps [gym]
-Dimecres 14/10|08:00-10:00 - CPDS [horari] # 10:00-12:00 - SMDE [horari] # 12:00-13:00 - Cita Nuria Domenech, Barbera promocio [principal] # 12:00-14:00 - AMMM [horari] # 19:00-20:00 - Biceps y espalda [gym]
-Dijous 15/10|Tot el dia - X Parallelism iteration 1 [tasksfet] # 10:00-12:00 - SMDE [horari] # 12:00-14:00 - AMMM [horari] # 16:00-20:00 - Biblio [principal]
-Divendres 16/10|10:00-12:00 - CPDS [horari] # 12:00-14:00 - TMIRI [horari]
-Dissabte 17/10|Lliure (Sense esdeveniments)
-Diumenge 18/10|Lliure (Sense esdeveniments)
-Dilluns 19/10|Lliure (Sense esdeveniments)
-Dimarts 20/10|Lliure (Sense esdeveniments)
-Dimecres 21/10|Lliure (Sense esdeveniments)
-Dijous 22/10|Lliure (Sense esdeveniments)
-Divendres 23/10|Lliure (Sense esdeveniments)
-Dissabte 24/10|Lliure (Sense esdeveniments)
-Diumenge 25/10|Lliure (Sense esdeveniments)
-TASCA|29/10|Parallelism Assignment 2
+Dilluns 26/10|08:00-10:00 - CPDS [horari] # 10:00-12:00 - SMDE [horari] # 12:00-14:00 - AMMM [horari]
+Dimarts 27/10|10:00-12:00 - RA [horari] # 12:00-14:00 - TMIRI [horari] # 15:00-18:00 - Biblio [principal]
+Dimecres 28/10|15:00-16:00 - Ramar 1 [principal]
+Dijous 29/10|Tot el dia - X Parallelism Assignment 2 [tasksfet] # 10:00-12:00 - SMDE [horari] # 12:00-14:00 - AMMM [horari]
+Divendres 30/10|08:00-10:00 - RA parcial [horari] # 10:00-12:00 - CPDS [horari] # 12:00-14:00 - TMIRI [horari] # 13:00-14:00 - Trucada Jessica IA&Software [principal] # 15:00-17:00 - TMIRI revision [principal]
+Dissabte 31/10|Lliure (Sense esdeveniments)
+Diumenge 01/11|Tot el dia - AMMM assignment 2 [tasks]
+Dilluns 02/11|Tot el dia - 25 euros a la Judith [principal] # Tot el dia - La casa del llibre - dracula [tasks] # Tot el dia - SMDE Assignment 1 project [tasks]
+Dimarts 03/11|Lliure (Sense esdeveniments)
+Dimecres 04/11|11:30-12:15 - Núria Rodríguez Pardo - Meet 1o1 | Serra D&A [principal]
+Dijous 05/11|Lliure (Sense esdeveniments)
+Divendres 06/11|Tot el dia - TMIRI - library exercice [tasks]
+Dissabte 07/11|Lliure (Sense esdeveniments)
+Diumenge 08/11|Lliure (Sense esdeveniments)
+TASCA|01/11|AMMM assignment 2
+TASCA|02/11|La casa del llibre - dracula
+TASCA|02/11|SMDE Assignment 1 project
+TASCA|06/11|TMIRI - library exercice
+TASCA|19/11|SMDE three questions assignment
+TASCA|08/12|AMMM project
+TASCA|18/01/27|SMDE project

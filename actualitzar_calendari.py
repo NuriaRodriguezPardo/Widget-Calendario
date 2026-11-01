@@ -1,5 +1,8 @@
 import datetime
 import os.path
+import sys
+import unicodedata
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -32,7 +35,55 @@ RUTA_SORTIDA = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'esdeven
 # Alternativa manual:
 # RUTA_SORTIDA = r"C:\Users\ELTEUUSUARI\Documents\Rainmeter\Skins\CalendariHoritzontal\esdeveniments_setmana.txt"
 
+# token.json i credentials.json es busquen SEMPRE a la carpeta de l'script,
+# vagis d'on vagis a executar-lo (VS Code, terminal, Programador de tasques...).
+CARPETA = os.path.dirname(os.path.abspath(__file__))
+RUTA_TOKEN = os.path.join(CARPETA, 'token.json')
+RUTA_CREDENCIALS = os.path.join(CARPETA, 'credentials.json')
+
 NOMS_DIES = ["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"]
+
+
+def configurar_consola():
+    """Evita que un accent, una ñ, una ç o qualsevol símbol raro faci petar un print()
+    quan la consola/redirecció de Windows no és UTF-8 (p. ex. al Programador de tasques):
+    el que no es pugui representar es mostra com a '?' en lloc de donar error."""
+    for flux in (sys.stdout, sys.stderr):
+        if flux is not None and hasattr(flux, 'reconfigure'):
+            try:
+                flux.reconfigure(errors='replace')
+            except Exception:
+                pass
+
+
+def obtenir_credencials():
+    """Retorna credencials vàlides. Si el token ha caducat o Google l'ha revocat
+    (invalid_grant), demana login un cop més sense haver d'esborrar token.json a mà."""
+    creds = None
+    if os.path.exists(RUTA_TOKEN):
+        creds = Credentials.from_authorized_user_file(RUTA_TOKEN, SCOPES)
+
+    if creds and creds.valid:
+        return creds
+
+    if creds and creds.expired and creds.refresh_token:
+        try:
+            creds.refresh(Request())
+        except RefreshError as e:
+            print(f"Avís: el token ja no és vàlid ({e}). Cal tornar a iniciar sessió.")
+            creds = None
+    else:
+        creds = None   # sense token, o token sense refresh_token
+
+    if not creds or not creds.valid:
+        flow = InstalledAppFlow.from_client_secrets_file(RUTA_CREDENCIALS, SCOPES)
+        # prompt='consent' força que Google doni SEMPRE un refresh_token nou;
+        # sense això, si ja havies autoritzat l'app, pot no tornar-lo a donar.
+        creds = flow.run_local_server(port=0, prompt='consent')
+
+    with open(RUTA_TOKEN, 'w', encoding='utf-8') as token:
+        token.write(creds.to_json())
+    return creds
 
 
 def obtenir_setmanes(n=2):
@@ -44,8 +95,20 @@ def obtenir_setmanes(n=2):
 
 def neteja(text):
     """Evita que un títol trenqui el format del fitxer: sense salts de línia
-    i sense '#', que és el separador d'esdeveniments."""
+    i sense '#', que és el separador d'esdeveniments.
+
+    A més, el passa a forma NFC (lletra + accent en un sol caràcter: à é í ï ò ú ü ç ñ l·l...).
+    Els textos escrits des d'un mòbil o un Mac poden arribar amb l'accent com a caràcter
+    separat, i aleshores es dibuixa desplaçat o com a un quadradet al widget."""
+    text = unicodedata.normalize('NFC', text)
     return ' '.join(text.replace('#', '\uff03').split())
+
+
+def clau_alfabetica(text):
+    """Clau per ordenar sense distingir majúscules ni accents (à = a, ç = c, ñ = n),
+    perquè 'Àlgebra' o 'Ñoquis' no quedin després de 'Zoologia' (Python ordena per codi)."""
+    descompost = unicodedata.normalize('NFD', text.casefold())
+    return ''.join(c for c in descompost if not unicodedata.combining(c))
 
 
 def _tasques_de_llista(service_tasks, llista, **filtres):
@@ -110,7 +173,7 @@ def obtenir_tasques(creds, dies):
                 continue
             pendents.append((due[:10], neteja(t.get('title') or '(sense títol)')))
 
-    pendents.sort()
+    pendents.sort(key=lambda p: (p[0], clau_alfabetica(p[1]), p[1]))
     return finestra, pendents
 
 
@@ -157,18 +220,8 @@ def escriure_fitxer(ruta, dies, calendari_setmana, tasques_pendents):
 
 
 def main():
-    creds = None
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
+    configurar_consola()
+    creds = obtenir_credencials()
 
     service = build('calendar', 'v3', credentials=creds)
     dies = obtenir_setmanes(2)   # setmana actual + setmana vinent (14 dies)

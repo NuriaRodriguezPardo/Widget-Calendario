@@ -1,4 +1,9 @@
 -- parser.lua
+-- CODIFICACIO: el millor es guardar aquest fitxer com a "UTF-8 amb BOM" (VS Code: barra d'estat ->
+-- "Save with Encoding" -> "UTF-8 with BOM"). Rainmeter nomes tracta els textos d'un script com a UTF-8
+-- si el fitxer te BOM; si no en te, els llegeix com a ANSI i els accents es veuen trencats
+-- (per exemple "NÃºria" en lloc de "Núria"). Per si algun editor treu el BOM, el script ho detecta
+-- i, sense BOM, converteix els textos a Windows-1252 abans d'enviar-los (vegeu ModeText).
 -- Motor de lectura + layout tipus "Google Calendar":
 -- els esdeveniments amb hores que realment se superposen es reparteixen
 -- en columnes dins de la mateixa columna del dia. Els de "Tot el dia"
@@ -73,6 +78,13 @@ ColorDefaultText  = "245,240,238,255"
 ColorPanell         = "15,15,20,120"      -- Fons dels panells de la dreta (com la graella)
 ColorCapcalera      = "120,85,95,215"     -- Capcalera de cada dia a la columna de la setmana vinent
 ColorCapceleraText  = "255,255,255,255"
+
+-- Mode de codificacio dels textos que s'envien als meters:
+--   'auto' : mira si aquest fitxer te BOM (amb BOM -> UTF-8; sense BOM -> converteix a Windows-1252)
+--   'utf8' : envia el text tal qual (nomes correcte si el fitxer te BOM)
+--   'ansi' : converteix sempre a Windows-1252 (per a Windows en castella/catala/Europa occidental)
+-- El mode triat queda escrit al Log de Rainmeter. Si veus "NÃºria", prova 'ansi'.
+ModeText = 'auto'
 
 local function Utf16ToUtf8(data, littleEndian)
     -- Conversió senzilla UTF-16 -> UTF-8 (només calen caràcters del pla bàsic,
@@ -176,6 +188,72 @@ local function AssignarColumnes(timed)
     return timed
 end
 
+-- UTF-8 -> Windows-1252 (nomes calen lletres catalanes/castellanes, ·, ¿, ¡, €, cometes i guions)
+local CP1252_EXTRA = {
+    [0x20AC]=0x80, [0x201A]=0x82, [0x0192]=0x83, [0x201E]=0x84, [0x2026]=0x85, [0x2020]=0x86,
+    [0x2021]=0x87, [0x02C6]=0x88, [0x2030]=0x89, [0x0160]=0x8A, [0x2039]=0x8B, [0x0152]=0x8C,
+    [0x017D]=0x8E, [0x2018]=0x91, [0x2019]=0x92, [0x201C]=0x93, [0x201D]=0x94, [0x2022]=0x95,
+    [0x2013]=0x96, [0x2014]=0x97, [0x02DC]=0x98, [0x2122]=0x99, [0x0161]=0x9A, [0x203A]=0x9B,
+    [0x0153]=0x9C, [0x017E]=0x9E, [0x0178]=0x9F,
+    [0xFF03]=0x23,   -- el # que l'script de Python substitueix per un ＃ de punt complet
+}
+
+local function Utf8ACp1252(str)
+    if not str:find('[\128-\255]') then return str end
+    local out = {}
+    local i, n = 1, #str
+    while i <= n do
+        local c = str:byte(i)
+        local cp, len = nil, 1
+        if c < 0x80 then
+            cp = c
+        elseif c >= 0xC2 and c <= 0xDF then
+            local c2 = str:byte(i + 1)
+            if c2 and c2 >= 0x80 and c2 <= 0xBF then cp, len = (c - 0xC0) * 64 + (c2 - 0x80), 2 end
+        elseif c >= 0xE0 and c <= 0xEF then
+            local c2, c3 = str:byte(i + 1), str:byte(i + 2)
+            if c2 and c3 and c2 >= 0x80 and c2 <= 0xBF and c3 >= 0x80 and c3 <= 0xBF then
+                cp, len = (c - 0xE0) * 4096 + (c2 - 0x80) * 64 + (c3 - 0x80), 3
+            end
+        elseif c >= 0xF0 and c <= 0xF4 then
+            len = 4   -- fora del pla basic (emojis): no existeix a Windows-1252
+        end
+        if cp and cp < 0x80 then
+            out[#out + 1] = string.char(cp)
+        elseif cp and cp >= 0xA0 and cp <= 0xFF then
+            out[#out + 1] = string.char(cp)
+        elseif cp and CP1252_EXTRA[cp] then
+            out[#out + 1] = string.char(CP1252_EXTRA[cp])
+        else
+            out[#out + 1] = '?'
+        end
+        i = i + len
+    end
+    return table.concat(out)
+end
+
+-- Rainmeter llegeix el text d'un script com a UTF-8 nomes si el fitxer .lua comença amb BOM.
+local function EsUnicode()
+    if ModeText == 'utf8' then return true end
+    if ModeText == 'ansi' then return false end
+    local ok, ruta = pcall(function() return SELF:GetOption('ScriptFile') end)
+    if ok and ruta and ruta ~= '' then
+        local f = io.open(ruta, 'rb')
+        if f then
+            local cap = f:read(3)
+            f:close()
+            return cap == '\239\187\191'
+        end
+    end
+    return true   -- no es pot saber: assumim el cas recomanat (UTF-8 amb BOM)
+end
+
+local function TextPerRainmeter(text)
+    if ModeUnicode == nil then ModeUnicode = EsUnicode() end
+    if ModeUnicode then return text end
+    return Utf8ACp1252(text)
+end
+
 local function PosarCaixa(nomBg, nomTxt, x, y, w, h, text, bgColor, txtColor, estil)
     SKIN:Bang('!SetOption', nomBg, 'X', x)
     SKIN:Bang('!SetOption', nomBg, 'Y', y)
@@ -188,7 +266,7 @@ local function PosarCaixa(nomBg, nomTxt, x, y, w, h, text, bgColor, txtColor, es
     SKIN:Bang('!SetOption', nomTxt, 'Y', y)
     SKIN:Bang('!SetOption', nomTxt, 'W', w)
     SKIN:Bang('!SetOption', nomTxt, 'H', h)
-    SKIN:Bang('!SetOption', nomTxt, 'Text', text)
+    SKIN:Bang('!SetOption', nomTxt, 'Text', TextPerRainmeter(text))
     SKIN:Bang('!SetOption', nomTxt, 'FontColor', txtColor)
     if estil then SKIN:Bang('!SetOption', nomTxt, 'StringStyle', estil) end
     SKIN:Bang('!SetOption', nomTxt, 'Hidden', '0')
@@ -262,7 +340,8 @@ local function PintarFiles(pref, x, w, files, yPanel, altPanel)
     if visibles < #files and fit >= 1 then
         usades = visibles + 1
         PosarCaixa(nBg .. usades, nTxt .. usades, x + 4, pos[usades], w - 8, AltFila - 2,
-            '... +' .. resta .. ' més', ColorBuit, ColorBuitText, 'Normal')
+            -- "m\195\169s" = "més" escrit amb escapes UTF-8 (requereix el fitxer guardat amb BOM, vegeu dalt)
+            '... +' .. resta .. ' m\195\169s', ColorBuit, ColorBuitText, 'Normal')
     end
     for s = usades + 1, PoolFiles do
         AmagarParella(nBg .. s, nTxt .. s)
@@ -346,6 +425,11 @@ end
 function Update()
     Dies = {}
     Tasques = {}
+    if ModeUnicode == nil then
+        ModeUnicode = EsUnicode()
+        SKIN:Bang('!Log', 'parser.lua - mode de text: ' ..
+            (ModeUnicode and 'UTF-8 (fitxer amb BOM)' or 'ANSI (sense BOM): converteixo els textos a Windows-1252'))
+    end
     local ruta = SKIN:GetVariable('CURRENTPATH') .. 'esdeveniments_setmana.txt'
     local contingut = LlegirContingut(ruta)
 
