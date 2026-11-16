@@ -1,5 +1,6 @@
 import datetime
 import os.path
+import re
 import sys
 import unicodedata
 from google.auth.exceptions import RefreshError
@@ -27,7 +28,13 @@ DICCIONARI_TAGS = {
 
 # A la columna de la setmana vinent NOMÉS hi surten els esdeveniments d'aquests tags
 # (calendari principal + tasques). La resta de calendaris no s'hi mostren.
-TAGS_SETMANA_VINENT = {'principal', 'tasks', 'tasksfet'}
+TAGS_SETMANA_VINENT = {'principal', 'tasks', 'tasksfet', 'aniversaris'}
+
+# Un esdeveniment del calendari principal el títol del qual COMENÇA per una d'aquestes paraules
+# es marca amb el tag 'aniversaris' (encara que no existeixi cap calendari amb aquest nom).
+# No distingeix majúscules ni accents: "Cumpleaños", "cumpleanos", "CUMPLE", "Aniversari",
+# "Birthday"... També accepta el plural ("Aniversaris") i un emoji o símbol al davant ("🎂 Cumple").
+PREFIXOS_ANIVERSARI = ['aniversari', 'cumpleaños', 'cumple', 'birthday']
 
 # IMPORTANT: canvia això per la ruta real de la teva skin de Rainmeter.
 # Si el .py ja viu dins la carpeta de la skin, la línia de sota ja fa la feina sola.
@@ -102,6 +109,27 @@ def neteja(text):
     separat, i aleshores es dibuixa desplaçat o com a un quadradet al widget."""
     text = unicodedata.normalize('NFC', text)
     return ' '.join(text.replace('#', '\uff03').split())
+
+
+def _sense_accents(text):
+    """Minúscules i sense accents (à = a, ñ = n, ç = c) per comparar paraules."""
+    descompost = unicodedata.normalize('NFD', text.casefold())
+    return ''.join(c for c in descompost if not unicodedata.combining(c))
+
+
+_RE_ANIVERSARI = re.compile(
+    r"^[\W_]*(?:%s)s?(?![^\W\d_])" % '|'.join(
+        re.escape(_sense_accents(p)) for p in sorted(PREFIXOS_ANIVERSARI, key=len, reverse=True)
+    )
+)
+
+
+def tag_segons_titol(titol, tag):
+    """Si l'esdeveniment és del calendari principal i el títol comença per 'Aniversari',
+    'Cumple', 'Cumpleaños', 'Birthday'... el converteix en 'aniversaris'. Altrament, no el toca."""
+    if tag == 'principal' and _RE_ANIVERSARI.match(_sense_accents(titol)):
+        return 'aniversaris'
+    return tag
 
 
 def clau_alfabetica(text):
@@ -269,20 +297,21 @@ def main():
                     hora_fi = None
 
                 titol = neteja(event.get('summary', '(sense títol)'))
+                tag_ev = tag_segons_titol(titol, tag)   # 'principal' -> 'aniversaris' si cal
 
                 if hora_ini is None:
                     if data_ini in calendari_setmana:
-                        calendari_setmana[data_ini].append((None, None, titol, tag))
+                        calendari_setmana[data_ini].append((None, None, titol, tag_ev))
                 elif data_fi == data_ini:
                     if data_ini in calendari_setmana:
-                        calendari_setmana[data_ini].append((hora_ini, hora_fi, titol, tag))
+                        calendari_setmana[data_ini].append((hora_ini, hora_fi, titol, tag_ev))
                 else:
                     # L'esdeveniment travessa mitjanit: el partim en dos trossos,
                     # un per cada dia, perquè cada dia és una columna independent.
                     if data_ini in calendari_setmana:
-                        calendari_setmana[data_ini].append((hora_ini, "23:59", f"{titol} (continua)", tag))
+                        calendari_setmana[data_ini].append((hora_ini, "23:59", f"{titol} (continua)", tag_ev))
                     if data_fi in calendari_setmana:
-                        calendari_setmana[data_fi].append(("00:00", hora_fi, f"{titol} (acaba)", tag))
+                        calendari_setmana[data_fi].append(("00:00", hora_fi, f"{titol} (acaba)", tag_ev))
         except Exception as e:
             print(f"Avís: no s'ha pogut llegir esdeveniments de '{nom_cal}': {e}")
             continue

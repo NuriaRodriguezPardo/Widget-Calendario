@@ -51,33 +51,44 @@ AltFila       = 18      -- alcada de cada fila (caixa de 16 + 2 d'espai)
 EspaiDia      = 6       -- espai extra abans de la capcalera de cada dia
 PoolFiles     = 37      -- parelles de meters que hi ha al .ini per panell (MeterProp_1..37, MeterTasca_1..37)
 
--- Paleta de rosas y marrones, con un punto de transparencia (alpha ~215)
+-- ===== Paleta de tardor: rosats, granats i un marró molt fosc per als detalls =====
 Colors = {
-    principal   = "235,190,200,215",  -- Rosa pastel (Núria / Principal)
-    horari      = "185,90,110,215",   -- Rosa envellutat / vinos
-    treball     = "165,95,75,215",    -- Terracota
-    gym         = "140,70,60,215",    -- Marró vermellós fosc
-    aniversaris = "90,55,50,215",     -- Marró xocolata fosc
-    tasks       = "245,225,205,215",  -- Beix / crema clar
-    tasksfet    = "170,150,145,150",  -- Gris rosat apagat (tasca feta)
+    principal   = "222,140,152,245",  -- Rosa antic viu (Núria / Principal)
+    horari      = "128,26,48,245",    -- Granat
+    treball     = "70,36,22,245",     -- Marró cafè molt fosc
+    gym         = "184,92,74,245",    -- Terracota rosada
+    aniversaris = "222,172,96,245",   -- Mostassa suau (tons de tardor, destaca entre els rosats)
+    tasks       = "247,224,222,245",  -- Rosa crema molt clar
+    tasksfet    = "214,196,192,200",  -- Rosa grisós apagat (tasca feta)
 }
--- Color de texto (blanco o negro) según el que mejor contrasta con cada fondo
-TextColors = {
-    principal   = "20,20,20,255",     -- fons clar -> lletres negres
-    horari      = "255,255,255,255",  -- fons fosc -> lletres blanques
-    treball     = "255,255,255,255",  -- fons fosc -> lletres blanques
-    gym         = "255,255,255,255",  -- fons fosc -> lletres blanques
-    aniversaris = "255,255,255,255",  -- fons fosc -> lletres blanques
-    tasks       = "20,20,20,255",     -- fons clar -> lletres negres
-    tasksfet    = "70,60,60,255",     -- text gris fosc
-}
-ColorBuit         = "150,110,110,140"  -- Fons per a dies lliures (marró rosat suau)
-ColorBuitText     = "235,225,220,255"
-ColorDefaultBg    = "120,95,95,190"    -- Fons per a tags desconeguts (dins de la paleta)
-ColorDefaultText  = "245,240,238,255"
-ColorPanell         = "15,15,20,120"      -- Fons dels panells de la dreta (com la graella)
-ColorCapcalera      = "120,85,95,215"     -- Capcalera de cada dia a la columna de la setmana vinent
-ColorCapceleraText  = "255,255,255,255"
+ColorBuit         = "232,190,188,170"  -- Dies lliures: rosa pols suau
+ColorDefaultBg    = "150,96,88,230"    -- Tags desconeguts: malva marronós
+ColorPanell       = "0,0,0,10"          -- Fons dels panells de la dreta: TRANSPARENT
+ColorCapcalera    = "70,36,22,240"     -- Capcalera de cada dia: el marró fort dels detalls
+ColorTitolDia     = "70,36,22,255"     -- Titols dels dies de la graella (marró fort)
+
+-- Color de lletra automatic: blanc si el fons es fosc, negre si es clar
+-- (es calcula amb la luminancia del color, aixi si canvies un color no cal tocar res mes)
+local function TextPerFons(rgba)
+    local r, g, b = rgba:match("^(%d+),(%d+),(%d+)")
+    local function lin(c)
+        c = tonumber(c) / 255
+        if c <= 0.03928 then return c / 12.92 end
+        return ((c + 0.055) / 1.055) ^ 2.4
+    end
+    local L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+    -- contrast amb blanc vs contrast amb negre (formula WCAG)
+    if (1.05 / (L + 0.05)) >= ((L + 0.05) / 0.05) then
+        return "255,255,255,255"
+    end
+    return "20,20,20,255"
+end
+
+TextColors = {}
+for tag, c in pairs(Colors) do TextColors[tag] = TextPerFons(c) end
+ColorBuitText      = TextPerFons(ColorBuit)
+ColorDefaultText   = TextPerFons(ColorDefaultBg)
+ColorCapceleraText = TextPerFons(ColorCapcalera)
 
 -- Mode de codificacio dels textos que s'envien als meters:
 --   'auto' : mira si aquest fitxer te BOM (amb BOM -> UTF-8; sense BOM -> converteix a Windows-1252)
@@ -495,7 +506,7 @@ function Update()
         local x = MargeEsquerre + (d - 1) * (AmpladaColumna + EspaiColumnes)
 
         SKIN:Bang('!SetOption', 'MeterTit' .. d, 'Text', dia and dia.titol or '')
-        SKIN:Bang('!SetOption', 'MeterTit' .. d, 'FontColor', '0,0,0')
+        SKIN:Bang('!SetOption', 'MeterTit' .. d, 'FontColor', ColorTitolDia)
         SKIN:Bang('!SetOption', 'MeterTit' .. d, 'X', x)
         SKIN:Bang('!UpdateMeter', 'MeterTit' .. d)
 

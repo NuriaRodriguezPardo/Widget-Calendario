@@ -1,21 +1,18 @@
-Dilluns 26/10|08:00-10:00 - CPDS [horari] # 10:00-12:00 - SMDE [horari] # 12:00-14:00 - AMMM [horari]
-Dimarts 27/10|10:00-12:00 - RA [horari] # 12:00-14:00 - TMIRI [horari] # 15:00-18:00 - Biblio [principal]
-Dimecres 28/10|15:00-16:00 - Ramar 1 [principal]
-Dijous 29/10|Tot el dia - X Parallelism Assignment 2 [tasksfet] # 10:00-12:00 - SMDE [horari] # 12:00-14:00 - AMMM [horari]
-Divendres 30/10|08:00-10:00 - RA parcial [horari] # 10:00-12:00 - CPDS [horari] # 12:00-14:00 - TMIRI [horari] # 13:00-14:00 - Trucada Jessica IA&Software [principal] # 15:00-17:00 - TMIRI revision [principal]
-Dissabte 31/10|Lliure (Sense esdeveniments)
-Diumenge 01/11|Tot el dia - AMMM assignment 2 [tasks]
-Dilluns 02/11|Tot el dia - 25 euros a la Judith [principal] # Tot el dia - La casa del llibre - dracula [tasks] # Tot el dia - SMDE Assignment 1 project [tasks]
-Dimarts 03/11|Lliure (Sense esdeveniments)
-Dimecres 04/11|11:30-12:15 - Núria Rodríguez Pardo - Meet 1o1 | Serra D&A [principal]
-Dijous 05/11|Lliure (Sense esdeveniments)
-Divendres 06/11|Tot el dia - TMIRI - library exercice [tasks]
-Dissabte 07/11|Lliure (Sense esdeveniments)
-Diumenge 08/11|Lliure (Sense esdeveniments)
-TASCA|01/11|AMMM assignment 2
-TASCA|02/11|La casa del llibre - dracula
-TASCA|02/11|SMDE Assignment 1 project
-TASCA|06/11|TMIRI - library exercice
-TASCA|19/11|SMDE three questions assignment
+Dilluns 16/11|Tot el dia - Aniversari Ferran [aniversaris] # Tot el dia - X AMMM project model [tasksfet] # 08:00-10:00 - CPDS [horari] # 10:00-12:00 - SMDE [horari] # 12:00-14:00 - AMMM [horari]
+Dimarts 17/11|Tot el dia - Aniversari de Montcheese [aniversaris] # 10:00-12:00 - RA [horari] # 12:00-14:00 - TMIRI parcial [horari]
+Dimecres 18/11|Tot el dia - Bachata [principal]
+Dijous 19/11|Tot el dia - X SMDE three questions assignment [tasksfet] # 10:00-12:00 - SMDE [horari] # 12:00-14:00 - AMMM [horari]
+Divendres 20/11|Tot el dia - Graduacio Grau [principal] # Tot el dia - X RA presentation proposal [tasksfet] # 08:00-10:00 - RA [horari] # 10:00-12:00 - CPDS [horari] # 11:30-14:30 - Peluqueria [principal] # 12:00-14:00 - TMIRI [horari]
+Dissabte 21/11|Tot el dia - Fiesta Bichtoria [principal] # Tot el dia - Aniversari de Tito Carlos [aniversaris]
+Diumenge 22/11|Tot el dia - Aniversari de Mamita [aniversaris]
+Dilluns 23/11|Tot el dia - Vaga Renfe [principal]
+Dimarts 24/11|Tot el dia - Aniversari de Papitu [aniversaris]
+Dimecres 25/11|Lliure (Sense esdeveniments)
+Dijous 26/11|Tot el dia - Distributed Systems Paxy [tasks]
+Divendres 27/11|Tot el dia - Salimos de fiesta [principal] # Tot el dia - Quedar en un día - Llúcia - hechizo, cine [tasks]
+Dissabte 28/11|Lliure (Sense esdeveniments)
+Diumenge 29/11|Lliure (Sense esdeveniments)
+TASCA|26/11|Distributed Systems Paxy
+TASCA|27/11|Quedar en un día - Llúcia - hechizo, cine
 TASCA|08/12|AMMM project
 TASCA|18/01/27|SMDE project
